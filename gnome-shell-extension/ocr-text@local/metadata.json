@@ -1,16 +1,14 @@
 {
   "uuid": "ocr-text@local",
   "name": "OCR Text Extractor",
-  "description": "Live Text OCR - select screen area to extract and copy text. Hotkey: Super+Shift+O",
-  "version": 1,
+  "description": "Live Text OCR – select screen area to extract and copy text. Hotkey: Super+Shift+O",
+  "version": 2,
   "shell-version": [
-    "42",
-    "43",
-    "44",
     "45",
-    "46"
+    "46",
+    "47"
   ],
-  "url": "https://github.com/yourusername/ocr-extension",
+  "url": "https://github.com/QuanyshK/ocr-extension",
   "settings-schema": "org.gnome.shell.extensions.ocr-text",
   "gettext-domain": "ocr-text"
 }
