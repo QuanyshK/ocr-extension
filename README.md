@@ -1,6 +1,6 @@
 # OCR Text Extractor
 
-Live Text OCR for Ubuntu — select any screen area, extract text, and copy it to the clipboard.
+Live Text OCR for GNOME — select any screen area, extract text, and copy it to the clipboard.
 
 ## Features
 
@@ -13,9 +13,16 @@ Live Text OCR for Ubuntu — select any screen area, extract text, and copy it t
 
 ## Requirements
 
-- Ubuntu 22.04+
 - GNOME Shell 45+
 - Python 3.8+
+
+### Supported Distributions
+
+| Distribution | Package Manager | Status |
+|--------------|-----------------|--------|
+| Ubuntu 22.04+ | `apt` | ✅ Supported |
+| Fedora | `dnf` | ✅ Supported |
+| Arch Linux | `pacman` | ✅ Supported |
 
 ## Installation
 
