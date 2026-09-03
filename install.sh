@@ -15,7 +15,7 @@ NC='\033[0m'
 log_info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 CPU_ONLY=false
 for arg in "$@"; do
@@ -32,21 +32,84 @@ detect_session() {
     fi
 }
 
+detect_pkg_manager() {
+    if command -v apt-get &>/dev/null; then
+        echo "apt"
+    elif command -v dnf &>/dev/null; then
+        echo "dnf"
+    elif command -v pacman &>/dev/null; then
+        echo "pacman"
+    else
+        echo "unknown"
+    fi
+}
+
+install_packages() {
+    local pkg_manager="$1"
+    shift
+    local pkgs=("$@")
+
+    case "$pkg_manager" in
+        apt)
+            sudo apt-get install -y -qq "${pkgs[@]}"
+            ;;
+        dnf)
+            sudo dnf install -y "${pkgs[@]}"
+            ;;
+        pacman)
+            sudo pacman -Sy --noconfirm --needed "${pkgs[@]}"
+            ;;
+        *)
+            log_error "Unsupported package manager: $pkg_manager"
+            exit 1
+            ;;
+    esac
+}
+
 SESSION_TYPE=$(detect_session)
+PKG_MANAGER=$(detect_pkg_manager)
+
+if [[ "$PKG_MANAGER" == "unknown" ]]; then
+    log_error "Could not detect a supported package manager."
+    log_error "Supported: apt-get (Debian/Ubuntu), dnf (Fedora), pacman (Arch/CachyOS/Manjaro)"
+    exit 1
+fi
 
 log_info "Installing OCR Text Extractor"
 [[ "$CPU_ONLY" == true ]] && log_info "Mode: CPU-only PyTorch"
 log_info "Session: $SESSION_TYPE"
+log_info "Package manager: $PKG_MANAGER"
 
 log_info "Installing system dependencies..."
-sudo apt-get update -qq
-sudo apt-get install -y -qq python3 python3-pip python3-venv libnotify-bin xclip
 
-if [[ "$SESSION_TYPE" == "wayland" ]]; then
-    sudo apt-get install -y -qq grim slurp wl-clipboard
-else
-    sudo apt-get install -y -qq gnome-screenshot
-fi
+case "$PKG_MANAGER" in
+    apt)
+        sudo apt-get update -qq
+        install_packages apt python3 python3-pip python3-venv libnotify-bin xclip libglib2.0-bin
+        if [[ "$SESSION_TYPE" == "wayland" ]]; then
+            install_packages apt grim slurp wl-clipboard
+        else
+            install_packages apt gnome-screenshot
+        fi
+        ;;
+    dnf)
+        install_packages dnf python3 python3-pip libnotify xclip glib2-devel
+        if [[ "$SESSION_TYPE" == "wayland" ]]; then
+            install_packages dnf grim slurp wl-clipboard
+        else
+            install_packages dnf gnome-screenshot
+        fi
+        ;;
+    pacman)
+        install_packages pacman python python-pip libnotify xclip glib2
+        if [[ "$SESSION_TYPE" == "wayland" ]]; then
+            install_packages pacman grim slurp wl-clipboard
+        else
+            install_packages pacman gnome-screenshot
+        fi
+        ;;
+esac
+
 log_ok "System dependencies installed"
 
 log_info "Setting up Python virtual environment..."
