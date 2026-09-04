@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.enkz-text-extractor" path="/org/gnome/shell/extensions/enkz-text-extractor/">
+
+    <key name="shortcut" type="as">
+      <default>['&lt;Super&gt;&lt;Shift&gt;o']</default>
+      <summary>Hotkey to launch OCR</summary>
+      <description>Keyboard shortcut to launch screen area OCR</description>
+    </key>
+
+    <key name="custom-script-path" type="s">
+      <default>''</default>
+      <summary>Custom OCR script path</summary>
+      <description>Absolute path to a custom screenshot_ocr.sh script. Leave empty to use the default ~/.local/share/ocr-extension/screenshot_ocr.sh</description>
+    </key>
+
+    <key name="auto-copy" type="b">
+      <default>true</default>
+      <summary>Automatically copy text</summary>
+      <description>Automatically copy recognized text to clipboard</description>
+    </key>
+
+    <key name="show-notification" type="b">
+      <default>true</default>
+      <summary>Show notifications</summary>
+      <description>Show notifications about OCR result</description>
+    </key>
+
+  </schema>
+</schemalist>

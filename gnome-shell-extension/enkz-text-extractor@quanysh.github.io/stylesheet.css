@@ -1,0 +1,26 @@
+/* Styles for EN/KZ Text Extractor Extension */
+
+.enkz-text-icon {
+    icon-size: 16px;
+}
+
+.enkz-text-button {
+    spacing: 6px;
+}
+
+.enkz-text-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.enkz-text-menu {
+    min-width: 200px;
+}
+
+.enkz-text-menu-item {
+    padding: 8px 12px;
+}
+
+.enkz-text-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}

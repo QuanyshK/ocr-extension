@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${HOME}/.local/share/ocr-extension"
-EXTENSION_DIR="${HOME}/.local/share/gnome-shell/extensions/ocr-text@local"
-EXTENSION_UUID="ocr-text@local"
+EXTENSION_UUID="enkz-text-extractor@quanysh.github.io"
+EXTENSION_DIR="${HOME}/.local/share/gnome-shell/extensions/${EXTENSION_UUID}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -75,7 +75,7 @@ if [[ "$PKG_MANAGER" == "unknown" ]]; then
     exit 1
 fi
 
-log_info "Installing OCR Text Extractor"
+log_info "Installing EN/KZ Text Extractor"
 [[ "$CPU_ONLY" == true ]] && log_info "Mode: CPU-only PyTorch"
 log_info "Session: $SESSION_TYPE"
 log_info "Package manager: $PKG_MANAGER"
@@ -145,11 +145,11 @@ gnome-extensions disable "$EXTENSION_UUID" 2>/dev/null || true
 rm -rf "$EXTENSION_DIR"
 mkdir -p "${EXTENSION_DIR}/schemas"
 
-cp "${SCRIPT_SOURCE}/gnome-shell-extension/ocr-text@local/metadata.json" "$EXTENSION_DIR/"
-cp "${SCRIPT_SOURCE}/gnome-shell-extension/ocr-text@local/extension.js"  "$EXTENSION_DIR/"
-cp "${SCRIPT_SOURCE}/gnome-shell-extension/ocr-text@local/prefs.js"      "$EXTENSION_DIR/"
-cp "${SCRIPT_SOURCE}/gnome-shell-extension/ocr-text@local/stylesheet.css" "$EXTENSION_DIR/"
-cp "${SCRIPT_SOURCE}/gnome-shell-extension/ocr-text@local/schemas/org.gnome.shell.extensions.ocr-text.gschema.xml" "${EXTENSION_DIR}/schemas/"
+cp "${SCRIPT_SOURCE}/gnome-shell-extension/${EXTENSION_UUID}/metadata.json" "$EXTENSION_DIR/"
+cp "${SCRIPT_SOURCE}/gnome-shell-extension/${EXTENSION_UUID}/extension.js"  "$EXTENSION_DIR/"
+cp "${SCRIPT_SOURCE}/gnome-shell-extension/${EXTENSION_UUID}/prefs.js"      "$EXTENSION_DIR/"
+cp "${SCRIPT_SOURCE}/gnome-shell-extension/${EXTENSION_UUID}/stylesheet.css" "$EXTENSION_DIR/"
+cp "${SCRIPT_SOURCE}/gnome-shell-extension/${EXTENSION_UUID}/schemas/org.gnome.shell.extensions.enkz-text-extractor.gschema.xml" "${EXTENSION_DIR}/schemas/"
 
 glib-compile-schemas "${EXTENSION_DIR}/schemas/"
 gnome-extensions enable "$EXTENSION_UUID" 2>/dev/null || true
@@ -157,9 +157,9 @@ log_ok "Extension installed and enabled"
 
 log_info "Creating desktop entry..."
 mkdir -p "${HOME}/.local/share/applications"
-cat > "${HOME}/.local/share/applications/ocr-text.desktop" <<EOF
+cat > "${HOME}/.local/share/applications/enkz-text-extractor.desktop" <<EOF
 [Desktop Entry]
-Name=OCR Text Extractor
+Name=EN/KZ Text Extractor
 Comment=Extract text from screen area
 Exec=${INSTALL_DIR}/screenshot_ocr.sh
 Icon=edit-find
@@ -173,7 +173,7 @@ log_ok "Desktop entry created"
 echo ""
 log_ok "Installation complete!"
 echo ""
-echo "  Hotkey: Super+Shift+O"
+echo "  Configure shortcut in Extension Manager → EN/KZ Text Extractor → Preferences"
 echo "  Extension: $EXTENSION_UUID"
 echo "  OCR dir:   $INSTALL_DIR"
 echo "  Extension: $EXTENSION_DIR"

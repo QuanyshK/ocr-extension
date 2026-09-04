@@ -1,0 +1,14 @@
+{
+  "uuid": "enkz-text-extractor@quanysh.github.io",
+  "name": "EN/KZ Text Extractor",
+  "description": "Area screen OCR for English, Kazakh and Russian with instant clipboard copy.",
+  "version": 3,
+  "shell-version": [
+    "45",
+    "46",
+    "47"
+  ],
+  "url": "https://github.com/QuanyshK/ocr-extension",
+  "settings-schema": "org.gnome.shell.extensions.enkz-text-extractor",
+  "gettext-domain": "enkz-text-extractor"
+}
