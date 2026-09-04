@@ -30,12 +30,14 @@ log_info "Building extension package: $UUID"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
+cd "$SRC_DIR"
+
 gnome-extensions pack \
     --force \
     --extra-source=stylesheet.css \
     --schema="schemas/org.gnome.shell.extensions.enkz-text-extractor.gschema.xml" \
     --out-dir="$BUILD_DIR" \
-    "$SRC_DIR"
+    .
 
 PACKAGE_PATH="${BUILD_DIR}/${UUID}.shell-extension.zip"
 

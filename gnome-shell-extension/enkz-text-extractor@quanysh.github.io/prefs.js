@@ -53,17 +53,6 @@ export default class EnkzTextExtractorPreferences extends ExtensionPreferences {
         shortcutsGroup.add(shortcutRow);
         page.add(shortcutsGroup);
 
-        const scriptGroup = new Adw.PreferencesGroup({ title: _('Script Path') });
-        const scriptRow = new Adw.EntryRow({
-            title: _('Custom OCR script path'),
-            text: settings.get_string('custom-script-path')
-        });
-        scriptRow.connect('changed', (row) => {
-            settings.set_string('custom-script-path', row.get_text());
-        });
-        scriptGroup.add(scriptRow);
-        page.add(scriptGroup);
-
         const behaviorGroup = new Adw.PreferencesGroup({ title: _('Behavior') });
 
         const autoCopyRow = new Adw.SwitchRow({ title: _('Auto-copy to clipboard') });
@@ -94,52 +83,87 @@ export default class EnkzTextExtractorPreferences extends ExtensionPreferences {
         return accelerators[0];
     }
 
-    _showShortcutDialog(parentWindow, settings, shortcutLabel, editButton) {
+_showShortcutDialog(parentWindow, settings, shortcutLabel, editButton) {
         const dialog = new Adw.MessageDialog({
             transient_for: parentWindow,
-            heading: _('Record Shortcut'),
-            body: _('Press the desired key combination...'),
+            heading: _('Set Shortcut'),
+            body: _('Press the key combination you want to use'),
             modal: true
         });
 
         dialog.add_response('cancel', _('Cancel'));
-        dialog.add_response('save', _('Save'));
+        dialog.add_response('save', _('Set'));
         dialog.set_response_appearance('save', Adw.ResponseAppearance.SUGGESTED);
+        dialog.set_response_enabled('save', false);
+
+        const previewLabel = new Gtk.ShortcutLabel({
+            accelerator: '',
+            halign: Gtk.Align.CENTER,
+            margin_top: 18,
+            margin_bottom: 12
+        });
+
+        const statusLabel = new Gtk.Label({
+            label: _('Waiting for key combination…'),
+            css_classes: ['dim-label'],
+            halign: Gtk.Align.CENTER
+        });
+
+        const box = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 8
+        });
+        box.append(previewLabel);
+        box.append(statusLabel);
+
+        dialog.set_extra_child(box);
 
         let captured = null;
         editButton.sensitive = false;
 
         const eventController = new Gtk.EventControllerKey();
-        eventController.connect('key-pressed', (_controller, keyval, keycode, state) => {
+        eventController.connect('key-pressed', (_controller, keyval, _keycode, state) => {
             if (keyval === Gdk.KEY_Escape) {
-                dialog.close();
+                dialog.response('cancel');
+                return Gdk.EVENT_STOP;
+            }
+
+            const isModifier = [
+                Gdk.KEY_Shift_L, Gdk.KEY_Shift_R,
+                Gdk.KEY_Control_L, Gdk.KEY_Control_R,
+                Gdk.KEY_Alt_L, Gdk.KEY_Alt_R,
+                Gdk.KEY_Super_L, Gdk.KEY_Super_R,
+                Gdk.KEY_Meta_L, Gdk.KEY_Meta_R
+            ].includes(keyval);
+
+            if (isModifier) {
                 return Gdk.EVENT_STOP;
             }
 
             const mask = state & Gtk.accelerator_get_default_mod_mask();
             const accel = Gtk.accelerator_name(keyval, mask);
 
-            if (accel && accel !== 'VoidSymbol') {
+            if (accel && accel !== 'VoidSymbol' && mask > 0) {
                 captured = accel;
-                dialog.body = _('Captured: ') + accel;
+                previewLabel.accelerator = accel;
+                statusLabel.label = _('New shortcut ready to apply');
+                dialog.set_response_enabled('save', true);
             }
 
             return Gdk.EVENT_STOP;
         });
 
-        dialog.get_content_area().add_controller(eventController);
+        dialog.add_controller(eventController);
 
         dialog.connect('response', (_dlg, response) => {
             editButton.sensitive = true;
             if (response === 'save' && captured) {
-                settings.set_strv('shortcut', [captured]);
-                shortcutLabel.accelerator = captured;
+                const normalizedAccel = captured.replace('<Primary>', '<Control>');
+                
+                settings.set_strv('shortcut', [normalizedAccel]);
+                shortcutLabel.accelerator = normalizedAccel;
             }
             dialog.destroy();
-        });
-
-        dialog.connect('close', () => {
-            editButton.sensitive = true;
         });
 
         dialog.present();

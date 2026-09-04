@@ -8,12 +8,6 @@
       <description>Keyboard shortcut to launch screen area OCR</description>
     </key>
 
-    <key name="custom-script-path" type="s">
-      <default>''</default>
-      <summary>Custom OCR script path</summary>
-      <description>Absolute path to a custom screenshot_ocr.sh script. Leave empty to use the default ~/.local/share/ocr-extension/screenshot_ocr.sh</description>
-    </key>
-
     <key name="auto-copy" type="b">
       <default>true</default>
       <summary>Automatically copy text</summary>
