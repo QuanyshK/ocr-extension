@@ -43,7 +43,8 @@ export default class EnkzTextExtractorPreferences extends ExtensionPreferences {
 
         resetButton.connect('clicked', () => {
             settings.reset('shortcut');
-            shortcutLabel.accelerator = this._formatShortcut(settings.get_strv('shortcut'));
+            const defaultShortcut = settings.get_strv('shortcut');
+            shortcutLabel.accelerator = this._formatShortcut(defaultShortcut);
         });
 
         shortcutRow.add_suffix(shortcutLabel);
@@ -158,10 +159,12 @@ _showShortcutDialog(parentWindow, settings, shortcutLabel, editButton) {
         dialog.connect('response', (_dlg, response) => {
             editButton.sensitive = true;
             if (response === 'save' && captured) {
-                const normalizedAccel = captured.replace('<Primary>', '<Control>');
-                
-                settings.set_strv('shortcut', [normalizedAccel]);
-                shortcutLabel.accelerator = normalizedAccel;
+                let normalized = captured
+                    .replace('<Primary>', '<Control>')
+                    .replace('<Ctrl>', '<Control>');
+
+                settings.set_strv('shortcut', [normalized]);
+                shortcutLabel.accelerator = normalized;
             }
             dialog.destroy();
         });

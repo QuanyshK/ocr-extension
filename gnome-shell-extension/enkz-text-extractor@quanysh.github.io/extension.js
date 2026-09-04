@@ -52,13 +52,6 @@ const OCRButton = GObject.registerClass(
         }
 
         _getScriptPath() {
-            const customPath = this._extension.getSettings().get_string('custom-script-path');
-            if (customPath && customPath.trim() !== '') {
-                if (GLib.file_test(customPath, GLib.FileTest.EXISTS)) {
-                    return customPath;
-                }
-            }
-
             if (GLib.file_test(DEFAULT_SCRIPT_PATH, GLib.FileTest.EXISTS)) {
                 return DEFAULT_SCRIPT_PATH;
             }
@@ -113,7 +106,6 @@ export default class EnkzTextExtractorExtension extends Extension {
         this._bindShortcut();
 
         this._shortcutChangedId = this._settings.connect('changed::shortcut', () => {
-            this._unbindShortcut();
             this._bindShortcut();
         });
     }
@@ -135,12 +127,23 @@ export default class EnkzTextExtractorExtension extends Extension {
     }
 
     _bindShortcut() {
+        this._unbindShortcut();
+
+        const shortcuts = this._settings.get_strv('shortcut');
+        if (!shortcuts || shortcuts.length === 0 || shortcuts[0].trim() === '') {
+            return;
+        }
+
         Main.wm.addKeybinding(
             'shortcut',
             this._settings,
             Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
-            () => this._ocrButton._runOCR()
+            () => {
+                if (this._ocrButton) {
+                    this._ocrButton._runOCR();
+                }
+            }
         );
     }
 
