@@ -1,0 +1,17 @@
+{
+  "uuid": "qk-text-extractor@quanysh.github.io",
+  "name": "QK Text Extractor",
+  "description": "Area screen OCR for Kazakh, English and Russian with instant clipboard copy.",
+  "version": 2,
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ],
+  "url": "https://github.com/QuanyshK/ocr-extension",
+  "settings-schema": "org.gnome.shell.extensions.qk-text-extractor",
+  "gettext-domain": "qk-text-extractor"
+}

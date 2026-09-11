@@ -1,0 +1,30 @@
+.qk-text-icon {
+    icon-size: 16px;
+}
+
+.qk-text-button {
+    spacing: 6px;
+}
+
+.qk-text-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.qk-text-menu {
+    min-width: 200px;
+}
+
+.qk-text-menu-item {
+    padding: 8px 12px;
+}
+
+.qk-text-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ocr-selection-box {
+    background-color: rgba(255, 0, 0, 0.12);
+    border: 2px solid rgba(255, 60, 60, 0.65);
+    border-radius: 2px;
+}
