@@ -5,9 +5,19 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
 
+const SHORTCUT_KEY = 'ocr-shortcut';
+
 export default class QkTextExtractorPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
+
+        // Migrate legacy 'shortcut' setting if present
+        try {
+            if (settings.get_user_value('shortcut') !== null && settings.get_user_value(SHORTCUT_KEY) === null) {
+                settings.set_strv(SHORTCUT_KEY, settings.get_strv('shortcut'));
+            }
+        } catch (_) {}
+
         const page = new Adw.PreferencesPage({
             title: _('General'),
             icon_name: 'preferences-system-symbolic'
@@ -21,7 +31,7 @@ export default class QkTextExtractorPreferences extends ExtensionPreferences {
         });
 
         const shortcutLabel = new Gtk.ShortcutLabel({
-            accelerator: this._formatShortcut(settings.get_strv('shortcut')),
+            accelerator: this._formatShortcut(settings.get_strv(SHORTCUT_KEY)),
             valign: Gtk.Align.CENTER
         });
 
@@ -42,8 +52,8 @@ export default class QkTextExtractorPreferences extends ExtensionPreferences {
         });
 
         resetButton.connect('clicked', () => {
-            settings.reset('shortcut');
-            const defaultShortcut = settings.get_strv('shortcut');
+            settings.reset(SHORTCUT_KEY);
+            const defaultShortcut = settings.get_strv(SHORTCUT_KEY);
             shortcutLabel.accelerator = this._formatShortcut(defaultShortcut);
         });
 
@@ -266,7 +276,7 @@ _showShortcutDialog(parentWindow, settings, shortcutLabel, editButton) {
                     .replace('<Primary>', '<Control>')
                     .replace('<Ctrl>', '<Control>');
 
-                settings.set_strv('shortcut', [normalized]);
+                settings.set_strv(SHORTCUT_KEY, [normalized]);
                 shortcutLabel.accelerator = normalized;
             }
             dialog.destroy();

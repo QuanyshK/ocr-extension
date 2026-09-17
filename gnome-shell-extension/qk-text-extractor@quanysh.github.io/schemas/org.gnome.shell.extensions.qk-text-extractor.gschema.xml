@@ -2,10 +2,16 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.qk-text-extractor" path="/org/gnome/shell/extensions/qk-text-extractor/">
 
-    <key name="shortcut" type="as">
-      <default>['&lt;Super&gt;&lt;Shift&gt;o']</default>
+    <key name="ocr-shortcut" type="as">
+      <default>['&lt;Shift&gt;&lt;Alt&gt;o']</default>
       <summary>Hotkey to launch OCR</summary>
       <description>Keyboard shortcut to launch screen area OCR</description>
+    </key>
+
+    <key name="shortcut" type="as">
+      <default>['&lt;Super&gt;&lt;Shift&gt;o']</default>
+      <summary>Deprecated hotkey key</summary>
+      <description>Legacy key maintained for migration</description>
     </key>
 
     <key name="auto-copy" type="b">

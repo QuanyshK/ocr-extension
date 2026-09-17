@@ -322,10 +322,20 @@ const OCRButton = GObject.registerClass(
     }
 );
 
+const SHORTCUT_KEY = 'ocr-shortcut';
+
 export default class QkTextExtractorExtension extends Extension {
     enable() {
         this._isShortcutBound = false;
         this._settings = this.getSettings();
+
+        // Migrate legacy 'shortcut' setting if present
+        try {
+            if (this._settings.get_user_value('shortcut') !== null && this._settings.get_user_value(SHORTCUT_KEY) === null) {
+                this._settings.set_strv(SHORTCUT_KEY, this._settings.get_strv('shortcut'));
+            }
+        } catch (_) {}
+
         this._ocrButton = new OCRButton(this);
         Main.panel.addToStatusArea('qk-text-extractor', this._ocrButton);
 
@@ -335,7 +345,7 @@ export default class QkTextExtractorExtension extends Extension {
 
         this._bindShortcut();
 
-        this._shortcutChangedId = this._settings.connect('changed::shortcut', () => {
+        this._shortcutChangedId = this._settings.connect(`changed::${SHORTCUT_KEY}`, () => {
             this._bindShortcut();
         });
 
@@ -374,13 +384,13 @@ export default class QkTextExtractorExtension extends Extension {
 
         if (!this._settings) return;
 
-        const shortcuts = this._settings.get_strv('shortcut');
+        const shortcuts = this._settings.get_strv(SHORTCUT_KEY);
         if (!shortcuts || shortcuts.length === 0 || shortcuts[0].trim() === '') {
             return;
         }
 
         const action = Main.wm.addKeybinding(
-            'shortcut',
+            SHORTCUT_KEY,
             this._settings,
             Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
             Shell.ActionMode.ALL,
@@ -394,14 +404,14 @@ export default class QkTextExtractorExtension extends Extension {
         if (action !== Meta.KeyBindingAction.NONE) {
             this._isShortcutBound = true;
         } else {
-            console.warn('[QK Text Extractor] Failed to bind shortcut:', shortcuts);
+            console.warn(`[QK Text Extractor] Failed to bind shortcut "${SHORTCUT_KEY}":`, shortcuts);
             this._isShortcutBound = false;
         }
     }
 
     _unbindShortcut() {
         if (this._isShortcutBound) {
-            Main.wm.removeKeybinding('shortcut');
+            Main.wm.removeKeybinding(SHORTCUT_KEY);
             this._isShortcutBound = false;
         }
     }
