@@ -194,8 +194,41 @@ const OCRButton = GObject.registerClass(
             }
         }
 
+        destroy() {
+            this._cleanupOverlay();
+            super.destroy();
+        }
+
+        _cleanupOverlay() {
+            if (this._cursorChanged) {
+                try {
+                    global.display.set_cursor(Meta.Cursor.DEFAULT);
+                } catch (_) {}
+                this._cursorChanged = false;
+            }
+            if (this._grab) {
+                try {
+                    Main.popModal(this._grab);
+                } catch (_) {}
+                this._grab = null;
+            }
+            if (this._selectionBox) {
+                try {
+                    this._selectionBox.destroy();
+                } catch (_) {}
+                this._selectionBox = null;
+            }
+            if (this._overlay) {
+                try {
+                    this._overlay.destroy();
+                } catch (_) {}
+                this._overlay = null;
+            }
+        }
+
         _runOCR() {
             if (!checkTesseractOrNotify()) return;
+            if (this._overlay) return;
 
             this.menu.close();
 
@@ -208,30 +241,20 @@ const OCRButton = GObject.registerClass(
             });
 
             Main.uiGroup.add_child(overlay);
-            const grab = Main.pushModal(overlay);
+            this._overlay = overlay;
+            this._grab = Main.pushModal(overlay);
+            this._cursorChanged = false;
             try {
                 global.display.set_cursor(Meta.Cursor.CROSSHAIR);
-            } catch (e) {
-            }
+                this._cursorChanged = true;
+            } catch (_) {}
 
             let startX = 0;
             let startY = 0;
             let isDragging = false;
-            let selectionBox = null;
 
             const cleanup = () => {
-                try {
-                    global.display.set_cursor(Meta.Cursor.DEFAULT);
-                } catch (e) {
-                }
-                if (grab) {
-                    Main.popModal(grab);
-                }
-                if (selectionBox) {
-                    selectionBox.destroy();
-                    selectionBox = null;
-                }
-                overlay.destroy();
+                this._cleanupOverlay();
             };
 
             overlay.connect('button-press-event', (actor, event) => {
@@ -244,19 +267,19 @@ const OCRButton = GObject.registerClass(
                 startY = y;
                 isDragging = true;
 
-                selectionBox = new St.Widget({
+                this._selectionBox = new St.Widget({
                     style_class: 'ocr-selection-box',
                     x: startX,
                     y: startY,
                     width: 0,
                     height: 0,
                 });
-                overlay.add_child(selectionBox);
+                overlay.add_child(this._selectionBox);
                 return Clutter.EVENT_STOP;
             });
 
             overlay.connect('motion-event', (actor, event) => {
-                if (!isDragging || !selectionBox) {
+                if (!isDragging || !this._selectionBox) {
                     return Clutter.EVENT_STOP;
                 }
                 const [currentX, currentY] = event.get_coords();
@@ -265,8 +288,8 @@ const OCRButton = GObject.registerClass(
                 const w = Math.abs(currentX - startX);
                 const h = Math.abs(currentY - startY);
 
-                selectionBox.set_position(x, y);
-                selectionBox.set_size(w, h);
+                this._selectionBox.set_position(x, y);
+                this._selectionBox.set_size(w, h);
                 return Clutter.EVENT_STOP;
             });
 
@@ -301,6 +324,7 @@ const OCRButton = GObject.registerClass(
 
 export default class QkTextExtractorExtension extends Extension {
     enable() {
+        this._isShortcutBound = false;
         this._settings = this.getSettings();
         this._ocrButton = new OCRButton(this);
         Main.panel.addToStatusArea('qk-text-extractor', this._ocrButton);
@@ -314,9 +338,22 @@ export default class QkTextExtractorExtension extends Extension {
         this._shortcutChangedId = this._settings.connect('changed::shortcut', () => {
             this._bindShortcut();
         });
+
+        this._sessionUpdatedId = Main.sessionMode.connect('updated', () => {
+            if (Main.sessionMode.currentMode === 'user' || Main.sessionMode.parentMode === 'user') {
+                if (!this._isShortcutBound && this._settings) {
+                    this._bindShortcut();
+                }
+            }
+        });
     }
 
     disable() {
+        if (this._sessionUpdatedId) {
+            Main.sessionMode.disconnect(this._sessionUpdatedId);
+            this._sessionUpdatedId = null;
+        }
+
         if (this._shortcutChangedId) {
             this._settings.disconnect(this._shortcutChangedId);
             this._shortcutChangedId = null;
@@ -335,25 +372,37 @@ export default class QkTextExtractorExtension extends Extension {
     _bindShortcut() {
         this._unbindShortcut();
 
+        if (!this._settings) return;
+
         const shortcuts = this._settings.get_strv('shortcut');
         if (!shortcuts || shortcuts.length === 0 || shortcuts[0].trim() === '') {
             return;
         }
 
-        Main.wm.addKeybinding(
+        const action = Main.wm.addKeybinding(
             'shortcut',
             this._settings,
             Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
-            Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+            Shell.ActionMode.ALL,
             () => {
                 if (this._ocrButton) {
                     this._ocrButton._runOCR();
                 }
             }
         );
+
+        if (action !== Meta.KeyBindingAction.NONE) {
+            this._isShortcutBound = true;
+        } else {
+            console.warn('[QK Text Extractor] Failed to bind shortcut:', shortcuts);
+            this._isShortcutBound = false;
+        }
     }
 
     _unbindShortcut() {
-        Main.wm.removeKeybinding('shortcut');
+        if (this._isShortcutBound) {
+            Main.wm.removeKeybinding('shortcut');
+            this._isShortcutBound = false;
+        }
     }
 }
